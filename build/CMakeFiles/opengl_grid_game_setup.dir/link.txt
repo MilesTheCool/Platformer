@@ -1,0 +1,1 @@
+/usr/bin/c++ -g CMakeFiles/opengl_grid_game_setup.dir/src/main.cpp.o CMakeFiles/opengl_grid_game_setup.dir/src/glad.c.o -o opengl_grid_game_setup  -lglfw 

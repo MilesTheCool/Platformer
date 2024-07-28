@@ -1,0 +1,14 @@
+[
+{
+  "directory": "/home/miles/dev/platformer/build",
+  "command": "/usr/bin/c++   -g -o CMakeFiles/opengl_grid_game_setup.dir/src/main.cpp.o -c /home/miles/dev/platformer/src/main.cpp",
+  "file": "/home/miles/dev/platformer/src/main.cpp",
+  "output": "CMakeFiles/opengl_grid_game_setup.dir/src/main.cpp.o"
+},
+{
+  "directory": "/home/miles/dev/platformer/build",
+  "command": "/usr/bin/cc   -g -o CMakeFiles/opengl_grid_game_setup.dir/src/glad.c.o -c /home/miles/dev/platformer/src/glad.c",
+  "file": "/home/miles/dev/platformer/src/glad.c",
+  "output": "CMakeFiles/opengl_grid_game_setup.dir/src/glad.c.o"
+}
+]

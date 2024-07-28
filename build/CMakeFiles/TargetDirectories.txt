@@ -1,0 +1,3 @@
+/home/miles/dev/platformer/build/CMakeFiles/opengl_grid_game_setup.dir
+/home/miles/dev/platformer/build/CMakeFiles/edit_cache.dir
+/home/miles/dev/platformer/build/CMakeFiles/rebuild_cache.dir
