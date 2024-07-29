@@ -34,27 +34,22 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 /// @param deltaTime used to make player movement speed consistent
 void processInput(GLFWwindow *window, Player& player, float deltaTime);
 
-
-
-const int MAP_WIDTH = 16;
-const int MAP_HEIGHT = 9;
-
 /// @brief Find the 9 tiles around the player for collision detection
 /// @param surrounding_tiles a vector to store pointers to nearby tiles
 /// @param player_center the rounded position of the center of the player tile
 /// @param static_map the tile map containing all static tiles
-void determine_surrounding_tiles(std::vector<Tile*>& surrounding_tiles, glm::vec2 player_center, Tile* static_map[MAP_HEIGHT][MAP_WIDTH]);
+void determine_surrounding_tiles(std::vector<Tile*>& surrounding_tiles, glm::vec2 player_center, std::vector<std::vector<Tile*>>& static_map);
 
 /// @brief Create the static map
 /// @param static_map the array to create containing nullptr or a pointer to a new tile object
 /// @param perspective the mat4 the initialize new tiles with
-void create_static_map(Tile* static_map[MAP_HEIGHT][MAP_WIDTH], glm::mat4 perspective);
+void create_static_map(std::vector<std::vector<Tile*>>& static_map, glm::mat4 perspective);
 
 // enforce 16:9 aspect ratio given a screen width
 
-const float TILE_SIZE = 64.0f;
-const float SCREEN_W = TILE_SIZE * 16.0f;
-const float SCREEN_H = TILE_SIZE * 9.0f;
+const float TILE_SIZE = 1.0f;
+const float SCREEN_W = 1024;
+const float SCREEN_H = 576;
 
 int main() {
     // setup opengl
@@ -66,10 +61,10 @@ int main() {
     }
 
     // setup orthogonal perspective
-    glm::mat4 perspective = glm::ortho(0.0f,SCREEN_W, 0.0f, SCREEN_H);
+    glm::mat4 perspective = glm::ortho(0.0f,16.0f, 0.0f, 9.0f);
     
     // create array of tiles
-    Tile* static_map[MAP_HEIGHT][MAP_WIDTH] = {{nullptr}};
+    std::vector<std::vector<Tile*>> static_map;
     create_static_map(static_map, perspective);
 
 
@@ -110,11 +105,13 @@ int main() {
         // render stuff
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
+
+
         // draw map
-        for (int y = 0; y < MAP_HEIGHT; ++y) {
-            for (int x = 0; x < MAP_WIDTH; ++x) {
-                if (static_map[y][x] != nullptr){
-                    static_map[y][x]->draw();
+        for (auto& row : static_map) {
+            for (auto& tile : row){
+                if (tile != nullptr){
+                    tile->draw();
                 }
             }
         }
@@ -128,12 +125,11 @@ int main() {
     }
     
     // deallocate map memory
-   // draw map
-        for (int y = 0; y < MAP_HEIGHT; ++y) {
-            for (int x = 0; x < MAP_WIDTH; ++x) {
-                if (static_map[y][x] != nullptr){
-                    delete static_map[y][x];
-                    static_map[y][x] = nullptr;
+        for (auto& row : static_map) {
+            for (auto& tile : row){
+                if (tile != nullptr){
+                    delete tile;
+                    tile = nullptr;
                 }
             }
         }
@@ -207,32 +203,19 @@ void processInput(GLFWwindow *window, Player& player, float deltaTime)
 
 }
 
-void create_static_map(Tile* static_map[MAP_HEIGHT][MAP_WIDTH], glm::mat4 perspective){
+void create_static_map(std::vector<std::vector<Tile*>>& static_map, glm::mat4 perspective){
         // screen holds 16:9 tiles
-    int map[MAP_HEIGHT][MAP_WIDTH] = {
-        {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2},
-        {2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
-        {2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
-        {2, 0, 0, 0, 0, 5, 0, 0, 0, 4, 4, 3, 3, 3, 1, 2},
-        {2, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
-        {2, 0, 0, 3, 4, 0, 0, 0, 4, 4, 4, 3, 3, 3, 1, 2},
-        {2, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
-        {2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
-        {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2},
+    int map[9][16] = {
+        {0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1},
+        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1},
     };
-
-    // flip map  - (0,0) is bottom left of map, so flip y so that's its index too
-    int temp;  // Temporary array to hold one row
-    // Loop through half of the rows
-    for (int i = 0; i < 9 / 2; i++) {
-        // Swap the x-values of the rows
-        for (int j = 0; j < 16; j++){
-            temp = map[i][j];
-            map[i][j] = map[8 - i][j];
-            map[8 - i][j] = temp;
-        }
-    }
-
 
     glm::vec3 color_map[] = {
         glm::vec3(0.7f, 0.0f, 0.0f),    // red
@@ -243,18 +226,25 @@ void create_static_map(Tile* static_map[MAP_HEIGHT][MAP_WIDTH], glm::mat4 perspe
         glm::vec3(0.0f, 0.7f, 0.7f),    // cyan
     };
 
-    for (int y = 0; y < MAP_HEIGHT; ++y) {
-        for (int x = 0; x < MAP_WIDTH; ++x){
+    // turn the map into a 2d vector with nullptr for blank tiles, flipping it so 0,0 is bottom left
+    for (int y = 8; y >= 0; --y) {
+        std::vector<Tile*> new_vec;
+        for (int x = 0; x < 16; ++x){
             if (map[y][x]) {
-                static_map[y][x] = new Tile(static_cast<float>(x) * TILE_SIZE, 
-                static_cast<float>(y) * TILE_SIZE, TILE_SIZE, TILE_SIZE, perspective,color_map[map[y][x] - 1]);
+                // push new tile to the row vector, invert the y position 
+                new_vec.push_back(new Tile(static_cast<float>(x) * TILE_SIZE, 
+                static_cast<float>(8 - y) * TILE_SIZE, TILE_SIZE, TILE_SIZE, perspective,color_map[map[y][x] - 1]));
+            }
+            else {
+                new_vec.push_back(nullptr);
             }
         }
+        static_map.push_back(new_vec);
     }
 
 }
 
-void determine_surrounding_tiles(std::vector<Tile*>& surrounding_tiles, glm::vec2 player_center, Tile* static_map[MAP_HEIGHT][MAP_WIDTH]) {
+void determine_surrounding_tiles(std::vector<Tile*>& surrounding_tiles, glm::vec2 player_center, std::vector<std::vector<Tile*>>& static_map) {
 
     // find what tile the center of the player is on before move
     glm::ivec2 center = glm::ivec2(static_cast<int>(player_center.x), static_cast<int>(player_center.y));
@@ -262,8 +252,8 @@ void determine_surrounding_tiles(std::vector<Tile*>& surrounding_tiles, glm::vec
     for (int y = -1; y < 2; ++y){
         for (int x = - 1; x < 2; ++x){
             // ensure not out of bounds - avoid invalid array access
-            if (center.y + y >= 0 && center.y + y < MAP_HEIGHT && center.x + x >= 0 && center.x + x < MAP_WIDTH){
-                surrounding_tiles.push_back(static_map[center.y + y][center.x + x]);
+            if (center.y + y >= 0 && center.y + y < static_map.size() && center.x + x >= 0 && center.x + x < static_map.at(0).size()){
+                surrounding_tiles.push_back(static_map.at(center.y + y).at(center.x + x));
             }
         }
     }

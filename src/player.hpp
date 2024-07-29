@@ -34,7 +34,7 @@ private:
     glm::vec2 dir;
     float size;
     const glm::vec3 color{0.7, 0.4, 1.0};
-    const float speed = 2.0f * 60.0f;       // 2 tiles per second (in terms of pixels)
+    const float speed = 2.0f;       // 2 tiles per second
     Tile* tile;
 
     bool can_jump;
@@ -45,7 +45,7 @@ private:
 };
 
 Player::Player(glm::vec2 pos, glm::mat4 projection) {
-    size = 32.0f;
+    size = 0.5f;
     dir = glm::vec2(0.0f, 0.0f);
     tile = new Tile(pos.x, pos.y, size, size, projection, color);
 
@@ -64,7 +64,7 @@ void Player::move(std::vector<Tile*> collidable_surfaces, float delta_time) {
     // find how far to move x and y
     float dx = dir.x * speed * delta_time;
 
-    const float OFFSET = 1.0f;  // 1 pixel offset
+    const float OFFSET = 0.001f;  // small offset so not overlapping
 
     // Horizontal collisions
     tile->set_left(tile->left() + dx);
@@ -98,7 +98,6 @@ void Player::move(std::vector<Tile*> collidable_surfaces, float delta_time) {
     // move the tile vertically
     tile->set_bottom(tile->bottom() + dy);
 
-    bool floor = false;  // check if floor hit, if yes reset fall timer
 
     for (Tile*& coll_tile : collidable_surfaces){
         if (colliding(*tile, *coll_tile)){
@@ -117,8 +116,6 @@ void Player::move(std::vector<Tile*> collidable_surfaces, float delta_time) {
                 // grounded, allow jumping again
                 can_jump = true;
                 jumped = false;
-
-                floor = true;
                 time_airborn = 0.0f;
 
                 tile->set_bottom(coll_tile->top());
@@ -126,9 +123,6 @@ void Player::move(std::vector<Tile*> collidable_surfaces, float delta_time) {
         }
     }
 
-    if (!floor){
-        can_jump = false;
-    }
     
 }
 
@@ -136,7 +130,7 @@ void Player::jump() {
     if (!can_jump){return;}  // early return if no jump
     
     jumped = true;
-    can_jump = false;
+    //can_jump = false;
     time_airborn = 0.0f;
 }
 
