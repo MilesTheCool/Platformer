@@ -26,7 +26,7 @@ public:
     void move_right() {dir.x += 1.0f;}
     void move_left() {dir.x -= 1.0f;}
 
-    // if possible, have the charact jump
+    /// @brief if possible, have the character jump
     void jump();
     
 
@@ -37,10 +37,9 @@ private:
     const float speed = 2.0f * 60.0f;       // 2 tiles per second (in terms of pixels)
     Tile* tile;
 
-    bool airborn;
     bool can_jump;
     bool jumped;
-    double time_airborn;
+    float time_airborn;
 
 
 };
@@ -51,7 +50,6 @@ Player::Player(glm::vec2 pos, glm::mat4 projection) {
     tile = new Tile(pos.x, pos.y, size, size, projection, color);
 
     can_jump = true;
-    airborn = false;
     jumped = false;
     time_airborn = 0.0;
 }
@@ -85,15 +83,14 @@ void Player::move(std::vector<Tile*> collidable_surfaces, float delta_time) {
     // reset dir for next move frame
     dir.x = 0.0f;
 
-    // if jumped, use formula -32t + 10 from jump (derivative of -16t^2 + 10t + h)
-    // if fell, use similar formula -32t for fall (derivative of  -16t^2 + h)
-    double dy = 0.0;
-    double t = glfwGetTime() - time_airborn;
+    // using formula -32t + 10 (derivative of -16t&2 + 10t + h) to get per frame dy from 'gravity'
+    // if jumped, add vertical velocity, otherwise just falling
+    float dy = 0.0;
+    time_airborn += delta_time;
     if (jumped){
-        dy = (-32 * t) + 14;
+        dy = (-32 * time_airborn) + 14;
     } else {
-        dy = (-32 * t);
-        std::cout << dy << std::endl;
+        dy = (-32 * time_airborn);
     }
 
     dy *= size * delta_time;
@@ -112,7 +109,7 @@ void Player::move(std::vector<Tile*> collidable_surfaces, float delta_time) {
 
                 // disable jumped, so no more upward velocity, reset time 
                 jumped = false;
-                time_airborn = glfwGetTime();
+                time_airborn = 0.0f;
             }
 
 
@@ -122,7 +119,7 @@ void Player::move(std::vector<Tile*> collidable_surfaces, float delta_time) {
                 jumped = false;
 
                 floor = true;
-                time_airborn = glfwGetTime();
+                time_airborn = 0.0f;
 
                 tile->set_bottom(coll_tile->top());
             }
@@ -140,8 +137,7 @@ void Player::jump() {
     
     jumped = true;
     can_jump = false;
-    airborn = true;
-    time_airborn = glfwGetTime();
+    time_airborn = 0.0f;
 }
 
 #endif
