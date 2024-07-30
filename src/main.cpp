@@ -1,15 +1,13 @@
 #include <glad/glad.h>                      // load in OpenGL functions
 #include <GLFW/glfw3.h>                     // OpenGL functions
-#include <iostream>                         // push stuff to terminal
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include "shader.hpp"
-#include "tile.hpp"
-#include <cmath>
-#include <vector>
-#include <iomanip>
-#include "player.hpp"
+#include <iostream>                         // push debug stuff to terminal
+#include <glm/glm.hpp>                      // use mat4 and vec2
+#include <vector>                           // use std::vector
+#include "tile.hpp"                         // use custom tile class
+#include "player.hpp"                       // use custom player class
+
+// file reading
+#include <fstream>
 
 /// @todo - 
 ///         images on tiles
@@ -205,17 +203,41 @@ void processInput(GLFWwindow *window, Player& player, float deltaTime)
 
 void create_static_map(std::vector<std::vector<Tile*>>& static_map, glm::mat4 perspective){
         // screen holds 16:9 tiles
-    int map[9][16] = {
-        {0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1},
-        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1},
-    };
+    std::vector<std::vector<int>> int_map;
+
+    std::ifstream file("/home/miles/dev/platformer/resources/maps/map.csv");
+
+    if (!file.is_open()) {
+        std::cerr << "Error opening file" << std::endl;
+    }
+    else{
+        std::vector<int> row;
+        while (!file.eof()) {
+            char ch = file.peek();
+            switch (ch) {
+                case ' ':  // ignore spaces and commas
+                case ',':
+                    ch = file.get();
+                    break;
+
+                case '\n':  // push back the row onto the int map
+                    ch = file.get();
+                    int_map.push_back(row);
+                    row = std::vector<int>{};
+                    break;
+            
+                default:
+                    if (isdigit(ch)){
+                        int num;
+                        file >> num;
+                        row.push_back(num);
+                    }
+                    break;
+
+            }   
+        }
+        int_map.push_back(row);
+    }
 
     glm::vec3 color_map[] = {
         glm::vec3(0.7f, 0.0f, 0.0f),    // red
@@ -227,19 +249,19 @@ void create_static_map(std::vector<std::vector<Tile*>>& static_map, glm::mat4 pe
     };
 
     // turn the map into a 2d vector with nullptr for blank tiles, flipping it so 0,0 is bottom left
-    for (int y = 8; y >= 0; --y) {
+    for (int y = 0; y < int_map.size(); ++y) {
         std::vector<Tile*> new_vec;
-        for (int x = 0; x < 16; ++x){
-            if (map[y][x]) {
+        for (int x = 0; x < int_map.at(0).size(); ++x){
+            if (int_map[y][x]) {
                 // push new tile to the row vector, invert the y position 
                 new_vec.push_back(new Tile(static_cast<float>(x) * TILE_SIZE, 
-                static_cast<float>(8 - y) * TILE_SIZE, TILE_SIZE, TILE_SIZE, perspective,color_map[map[y][x] - 1]));
+                static_cast<float>(int_map.size() - y - 1) * TILE_SIZE, TILE_SIZE, TILE_SIZE, perspective,color_map[int_map[y][x] - 1]));
             }
             else {
                 new_vec.push_back(nullptr);
             }
         }
-        static_map.push_back(new_vec);
+        static_map.insert(static_map.begin(), new_vec);
     }
 
 }
