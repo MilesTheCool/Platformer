@@ -18,7 +18,7 @@ public:
     ~Tile();
 
     /// @brief Draw the tile to the screen
-    void draw();
+    void draw(glm::mat4 view);
 
     /// @brief Checks if two existing tiles are overlapping, return true if they are
     friend bool colliding(Tile& tile_one, Tile& tile_two);
@@ -38,7 +38,9 @@ public:
     /// @brief set the color uniform for the tile
     /// run once at start, only needs to be run again if color changes
     /// @param color vec3 of the color of the tile
-    void set_color(glm::vec3 color) {glUniform3f(glGetUniformLocation(shader->get_ID(), "color"), color.x, color.y, color.z);}
+    void set_color(glm::vec3 color) {shader->setVec3("color", color);}
+
+    void set_view_matrix(glm::mat4 view) {shader->setMat4("view", view);}
 
     /* SIZE ACCESS */
     /// @brief size in coordinate space of the tile
@@ -152,6 +154,7 @@ Tile::Tile(float left, float bottom, float width, float height,
     set_projection_matrix(projection);
     set_color(tile_color);
     set_transform_matrix();
+    set_view_matrix(glm::mat4(1.0f));
     glUseProgram(0);
 }
 
@@ -165,12 +168,13 @@ Tile::~Tile() {
     glDeleteVertexArrays(1, &VAO);
 }
 
-void Tile::draw() {
+void Tile::draw(glm::mat4 view) {
 
     glBindVertexArray(VAO);
     shader->use();
 
-    //glUniform3f(glGetUniformLocation(shader.get_ID(), "color"), color.x, color.y, color.z);
+    // set the view matrix as the camera moves
+    set_view_matrix(view);
 
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 

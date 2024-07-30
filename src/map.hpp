@@ -15,7 +15,9 @@ public:
     Map(std::string file_path,float tile_size, glm::mat4 perspective);
     ~Map();
 
-    void draw();
+    void draw(glm::mat4 view);
+
+    void set_view(glm::mat4 view);
 
     /// @brief  member variables, data being displayed and if error in reading file
     std::vector<std::vector<Tile*>> data;
@@ -107,11 +109,22 @@ Map::~Map(){
         }
 }
 
-void Map::draw() {
+void Map::draw(glm::mat4 view) {
     for (auto& row : data) {
             for (auto& tile : row){
                 if (tile != nullptr){
-                    tile->draw();
+                    tile->draw(view);
+                }
+            }
+        }
+}
+
+void Map::set_view(glm::mat4 view) {
+    for (auto& row : data) {
+            for (auto& tile : row){
+                if (tile != nullptr){
+                    //tile->set_view_matrix(view);
+                    continue;
                 }
             }
         }

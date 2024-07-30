@@ -59,6 +59,9 @@ int main() {
     // create Player
     Player* player = new Player(glm::vec2(3.0f * TILE_SIZE, 4.0f * TILE_SIZE), perspective);
 
+    // CREATE CAMERA
+    
+
     // wireframe
     //glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
     float deltaTime = 0.0f;	// Time between current frame and last frame
@@ -90,16 +93,25 @@ int main() {
         // move player and handle collision with static tiles
         player->move(surrounding_tiles, deltaTime);
 
+        // update camera
+        glm::vec3 cameraPos = glm::vec3(player->pos().x - 8.0f, player->pos().y - 4.5f, 1.0f);
+        glm::vec3 cameraTarget = glm::vec3(player->pos().x - 8.0f, player->pos().y - 4.5f, 0.0f);
+        glm::vec3 up{0.0f, 1.0f, 0.0f};
+
+        glm::mat4 view = glm::lookAt(cameraPos, cameraTarget, up);
+
         // render stuff
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-
+        // /view = glm::mat4(1.0f);
         // draw map
-        static_map->draw();
+        static_map->draw(view);
 
         // draw player
-        player->draw();
+        player->draw(view);
+
+        std::cout << player->pos().x << std::endl;
         
         glfwSwapBuffers(window);
         glfwPollEvents();

@@ -12,7 +12,7 @@ public:
     Player(glm::vec2 pos, glm::mat4 pojection);
     ~Player();
 
-    void draw() {tile->draw();}
+    void draw(glm::mat4 view) {tile->draw(view);}
 
     /// @brief Move the player and collide with any hard tiles
     /// @param collidable_surfaces all tiles that can be collided with
@@ -28,6 +28,8 @@ public:
 
     /// @brief if possible, have the character jump
     void jump();
+
+    // void set_view(glm::mat4 view) {tile->set_view_matrix(view);}
     
 
 private:
