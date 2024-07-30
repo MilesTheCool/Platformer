@@ -87,6 +87,10 @@ public:
         if (status == INVALID_SHADERS) {return;}  // return if in invalid state
         glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, glm::value_ptr(value));
     }
+    void setVec3(const std::string &name, glm::vec3 &value){
+        if (status == INVALID_SHADERS) {return;}  // return if in invalid state
+        glUniform3f(glGetUniformLocation(ID, name.c_str()), value.x, value.y, value.z);
+    }
 };
 
 
