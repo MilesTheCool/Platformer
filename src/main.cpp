@@ -5,13 +5,10 @@
 #include <vector>                           // use std::vector
 #include "tile.hpp"                         // use custom tile class
 #include "player.hpp"                       // use custom player class
-
-// file reading
-#include <fstream>
+#include "map.hpp"
 
 /// @todo - 
 ///         images on tiles
-///         read in map data from csv file
 
 /// @brief create the window and initialize OpenGL, returning pointer to window
 /// @param width The width in pixels of the screen to be made
@@ -36,15 +33,9 @@ void processInput(GLFWwindow *window, Player& player, float deltaTime);
 /// @param surrounding_tiles a vector to store pointers to nearby tiles
 /// @param player_center the rounded position of the center of the player tile
 /// @param static_map the tile map containing all static tiles
-void determine_surrounding_tiles(std::vector<Tile*>& surrounding_tiles, glm::vec2 player_center, std::vector<std::vector<Tile*>>& static_map);
+void determine_surrounding_tiles(std::vector<Tile*>& surrounding_tiles, glm::vec2 player_center, Map& static_map);
 
-/// @brief Create the static map
-/// @param static_map the array to create containing nullptr or a pointer to a new tile object
-/// @param perspective the mat4 the initialize new tiles with
-void create_static_map(std::vector<std::vector<Tile*>>& static_map, glm::mat4 perspective);
-
-// enforce 16:9 aspect ratio given a screen width
-
+// global constants
 const float TILE_SIZE = 1.0f;
 const float SCREEN_W = 1024;
 const float SCREEN_H = 576;
@@ -62,8 +53,7 @@ int main() {
     glm::mat4 perspective = glm::ortho(0.0f,16.0f, 0.0f, 9.0f);
     
     // create array of tiles
-    std::vector<std::vector<Tile*>> static_map;
-    create_static_map(static_map, perspective);
+    Map* static_map = new Map("/home/miles/dev/platformer/resources/maps/map.csv", TILE_SIZE, perspective);
 
 
     // create Player
@@ -95,7 +85,7 @@ int main() {
 
         // determine the 9 cells around the player
         std::vector<Tile*> surrounding_tiles;
-        determine_surrounding_tiles(surrounding_tiles, player->pos() / TILE_SIZE, static_map);
+        determine_surrounding_tiles(surrounding_tiles, player->pos() / TILE_SIZE, *static_map);
 
         // move player and handle collision with static tiles
         player->move(surrounding_tiles, deltaTime);
@@ -106,13 +96,7 @@ int main() {
 
 
         // draw map
-        for (auto& row : static_map) {
-            for (auto& tile : row){
-                if (tile != nullptr){
-                    tile->draw();
-                }
-            }
-        }
+        static_map->draw();
 
         // draw player
         player->draw();
@@ -123,14 +107,8 @@ int main() {
     }
     
     // deallocate map memory
-        for (auto& row : static_map) {
-            for (auto& tile : row){
-                if (tile != nullptr){
-                    delete tile;
-                    tile = nullptr;
-                }
-            }
-        }
+    delete static_map;
+    static_map = nullptr;
 
     // deallocate player
     delete player;
@@ -201,72 +179,8 @@ void processInput(GLFWwindow *window, Player& player, float deltaTime)
 
 }
 
-void create_static_map(std::vector<std::vector<Tile*>>& static_map, glm::mat4 perspective){
-        // screen holds 16:9 tiles
-    std::vector<std::vector<int>> int_map;
 
-    std::ifstream file("/home/miles/dev/platformer/resources/maps/map.csv");
-
-    if (!file.is_open()) {
-        std::cerr << "Error opening file" << std::endl;
-    }
-    else{
-        std::vector<int> row;
-        while (!file.eof()) {
-            char ch = file.peek();
-            switch (ch) {
-                case ' ':  // ignore spaces and commas
-                case ',':
-                    ch = file.get();
-                    break;
-
-                case '\n':  // push back the row onto the int map
-                    ch = file.get();
-                    int_map.push_back(row);
-                    row = std::vector<int>{};
-                    break;
-            
-                default:
-                    if (isdigit(ch)){
-                        int num;
-                        file >> num;
-                        row.push_back(num);
-                    }
-                    break;
-
-            }   
-        }
-        int_map.push_back(row);
-    }
-
-    glm::vec3 color_map[] = {
-        glm::vec3(0.7f, 0.0f, 0.0f),    // red
-        glm::vec3(0.0f, 0.7f, 0.0f),    // green
-        glm::vec3(0.7f, 0.7f, 0.0f),    // yellow
-        glm::vec3(0.0f, 0.0f, 0.7f),    // blue
-        glm::vec3(0.7f, 0.0f, 0.7f),    // magenta
-        glm::vec3(0.0f, 0.7f, 0.7f),    // cyan
-    };
-
-    // turn the map into a 2d vector with nullptr for blank tiles, flipping it so 0,0 is bottom left
-    for (int y = 0; y < int_map.size(); ++y) {
-        std::vector<Tile*> new_vec;
-        for (int x = 0; x < int_map.at(0).size(); ++x){
-            if (int_map[y][x]) {
-                // push new tile to the row vector, invert the y position 
-                new_vec.push_back(new Tile(static_cast<float>(x) * TILE_SIZE, 
-                static_cast<float>(int_map.size() - y - 1) * TILE_SIZE, TILE_SIZE, TILE_SIZE, perspective,color_map[int_map[y][x] - 1]));
-            }
-            else {
-                new_vec.push_back(nullptr);
-            }
-        }
-        static_map.insert(static_map.begin(), new_vec);
-    }
-
-}
-
-void determine_surrounding_tiles(std::vector<Tile*>& surrounding_tiles, glm::vec2 player_center, std::vector<std::vector<Tile*>>& static_map) {
+void determine_surrounding_tiles(std::vector<Tile*>& surrounding_tiles, glm::vec2 player_center, Map& static_map) {
 
     // find what tile the center of the player is on before move
     glm::ivec2 center = glm::ivec2(static_cast<int>(player_center.x), static_cast<int>(player_center.y));
@@ -274,8 +188,8 @@ void determine_surrounding_tiles(std::vector<Tile*>& surrounding_tiles, glm::vec
     for (int y = -1; y < 2; ++y){
         for (int x = - 1; x < 2; ++x){
             // ensure not out of bounds - avoid invalid array access
-            if (center.y + y >= 0 && center.y + y < static_map.size() && center.x + x >= 0 && center.x + x < static_map.at(0).size()){
-                surrounding_tiles.push_back(static_map.at(center.y + y).at(center.x + x));
+            if (center.y + y >= 0 && center.y + y < static_map.data.size() && center.x + x >= 0 && center.x + x < static_map.data.at(0).size()){
+                surrounding_tiles.push_back(static_map.data.at(center.y + y).at(center.x + x));
             }
         }
     }
