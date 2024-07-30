@@ -40,6 +40,7 @@ public:
     /// @param color vec3 of the color of the tile
     void set_color(glm::vec3 color) {shader->setVec3("color", color);}
 
+    /// @brief set the view matrix being used for the camera
     void set_view_matrix(glm::mat4 view) {shader->setMat4("view", view);}
 
     /* SIZE ACCESS */

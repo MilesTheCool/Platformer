@@ -17,8 +17,6 @@ public:
 
     void draw(glm::mat4 view);
 
-    void set_view(glm::mat4 view);
-
     /// @brief  member variables, data being displayed and if error in reading file
     std::vector<std::vector<Tile*>> data;
     bool is_error;
@@ -114,17 +112,6 @@ void Map::draw(glm::mat4 view) {
             for (auto& tile : row){
                 if (tile != nullptr){
                     tile->draw(view);
-                }
-            }
-        }
-}
-
-void Map::set_view(glm::mat4 view) {
-    for (auto& row : data) {
-            for (auto& tile : row){
-                if (tile != nullptr){
-                    //tile->set_view_matrix(view);
-                    continue;
                 }
             }
         }

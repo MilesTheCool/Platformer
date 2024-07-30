@@ -35,8 +35,16 @@ void processInput(GLFWwindow *window, Player& player, float deltaTime);
 /// @param static_map the tile map containing all static tiles
 void determine_surrounding_tiles(std::vector<Tile*>& surrounding_tiles, glm::vec2 player_center, Map& static_map);
 
+/// @brief generate the view matrix to center the player, or lock the camera to the map edges
+/// @param player_pos The center of the player object
+/// @param map_size The (width, height) in tiles of the map (assumes (0,0) is bottom left)
+/// @return the view matrix applied to all drawn objects to control the camera
+glm::mat4 generate_view_matrix(glm::vec2 player_pos, glm::ivec2 map_size);
+
 // global constants
 const float TILE_SIZE = 1.0f;
+const float NUM_OF_TILES_WIDTH = 16.0f;
+const float NUM_OF_TILES_HEIGHT = 9.0f;
 const float SCREEN_W = 1024;
 const float SCREEN_H = 576;
 
@@ -50,7 +58,7 @@ int main() {
     }
 
     // setup orthogonal perspective
-    glm::mat4 perspective = glm::ortho(0.0f,16.0f, 0.0f, 9.0f);
+    glm::mat4 perspective = glm::ortho(0.0f,NUM_OF_TILES_WIDTH, 0.0f, NUM_OF_TILES_HEIGHT);
     
     // create array of tiles
     Map* static_map = new Map("/home/miles/dev/platformer/resources/maps/map.csv", TILE_SIZE, perspective);
@@ -93,12 +101,8 @@ int main() {
         // move player and handle collision with static tiles
         player->move(surrounding_tiles, deltaTime);
 
-        // update camera
-        glm::vec3 cameraPos = glm::vec3(player->pos().x - 8.0f, player->pos().y - 4.5f, 1.0f);
-        glm::vec3 cameraTarget = glm::vec3(player->pos().x - 8.0f, player->pos().y - 4.5f, 0.0f);
-        glm::vec3 up{0.0f, 1.0f, 0.0f};
-
-        glm::mat4 view = glm::lookAt(cameraPos, cameraTarget, up);
+        // generate the view matrix                                     size of a row (aka x or width)  num of rows (aka y or height)
+        glm::mat4 view = generate_view_matrix(player->pos(), glm::ivec2(static_map->data.at(0).size(), static_map->data.size()));
 
         // render stuff
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -110,8 +114,6 @@ int main() {
 
         // draw player
         player->draw(view);
-
-        std::cout << player->pos().x << std::endl;
         
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -206,6 +208,25 @@ void determine_surrounding_tiles(std::vector<Tile*>& surrounding_tiles, glm::vec
         }
     }
 
+}
+
+glm::mat4 generate_view_matrix(glm::vec2 player_pos, glm::ivec2 map_size) {
+
+    // check x is between 0 and map_size.x
+    float x;
+    if (player_pos.x - (NUM_OF_TILES_WIDTH / 2.0f) <= 0.0f) {x = 0.0f;}
+    else if (player_pos.x + (NUM_OF_TILES_WIDTH / 2.0f) >= static_cast<float>(map_size.x)) {x = static_cast<float>(map_size.x) - NUM_OF_TILES_WIDTH;}
+    else {x = player_pos.x - (NUM_OF_TILES_WIDTH / 2.0f);}
+
+    // check y is between 0 and map_size.y
+    float y;
+    if (player_pos.y - (NUM_OF_TILES_HEIGHT / 2.0f) <= 0.0f) {y = 0.0f;}
+    else if (player_pos.y + (NUM_OF_TILES_HEIGHT / 2.0f) >= static_cast<float>(map_size.y)) {y = static_cast<float>(map_size.y) - NUM_OF_TILES_HEIGHT;}
+    else {y = player_pos.y - NUM_OF_TILES_HEIGHT / 2.0f;}
+
+
+    //          look at          camera pos             camera target          up vector
+    return glm::lookAt(glm::vec3(x, y, 1.0f), glm::vec3(x, y, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 }
 
 /* EOF */

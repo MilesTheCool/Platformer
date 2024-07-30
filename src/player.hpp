@@ -34,7 +34,7 @@ public:
 
 private:
     glm::vec2 dir;
-    float size;
+    glm::vec2 size;
     const glm::vec3 color{0.7, 0.4, 1.0};
     const float speed = 2.0f;       // 2 tiles per second
     Tile* tile;
@@ -47,9 +47,9 @@ private:
 };
 
 Player::Player(glm::vec2 pos, glm::mat4 projection) {
-    size = 0.5f;
+    size = glm::vec2(0.5f, 0.75f);
     dir = glm::vec2(0.0f, 0.0f);
-    tile = new Tile(pos.x, pos.y, size, size, projection, color);
+    tile = new Tile(pos.x, pos.y, size.x, size.y, projection, color);
 
     can_jump = true;
     jumped = false;
@@ -95,7 +95,7 @@ void Player::move(std::vector<Tile*> collidable_surfaces, float delta_time) {
         dy = (-32 * time_airborn);
     }
 
-    dy *= size * delta_time;
+    dy *= 0.5f * delta_time;
 
     // move the tile vertically
     tile->set_bottom(tile->bottom() + dy);
